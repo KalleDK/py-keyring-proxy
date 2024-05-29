@@ -1,9 +1,11 @@
+# mypy: disable-error-code="return-value, valid-type"
+
 import abc
 import dataclasses
 import json
 import typing
 from types import UnionType
-from typing import Any, ClassVar, Self, Type, TypedDict, TypeVar, Union, get_args, get_origin, overload
+from typing import Any, ClassVar, Self, Type, TypeVar, Union, get_args, get_origin, overload
 
 import keyring.backend
 import keyring.credentials
@@ -12,10 +14,6 @@ if typing.TYPE_CHECKING:
     from _typeshed import DataclassInstance
 else:
     DataclassInstance = object
-
-
-class SuccessResponse(TypedDict):
-    result: Any
 
 
 @dataclasses.dataclass
@@ -86,35 +84,35 @@ class SetRequest:
 
 
 @dataclasses.dataclass
-class CredResponse:
+class CredentialResponse:
     result: Credential | None
 
 
 @dataclasses.dataclass
-class CredRequest:
+class CredentialRequest:
     command: ClassVar = "cred"
     service: str
     username: str | None = None
 
     @classmethod
-    def get_reponse_cls(cls) -> Type[CredResponse]:
-        return CredResponse
+    def get_reponse_cls(cls) -> Type[CredentialResponse]:
+        return CredentialResponse
 
 
-Requests = GetRequest | SetRequest | DeleteRequest | CredRequest
-Responses = GetResponse | SetResponse | DeleteResponse | CredResponse | ErrorResponse
+Requests = GetRequest | SetRequest | DeleteRequest | CredentialRequest
+Responses = GetResponse | SetResponse | DeleteResponse | CredentialResponse
 
 ReqPacket = str
 RespPacket = str
 
 
-def is_union(t: object) -> bool:
+def _is_union(t: object) -> bool:
     origin = get_origin(t)
     return origin is Union or origin is UnionType
 
 
-def parse_cls(cls: Type[Any]) -> tuple[Type[Any], bool]:
-    if not is_union(cls):
+def _parse_cls(cls: Type[Any]) -> tuple[Type[Any], bool]:
+    if not _is_union(cls):
         return cls, False
     args = get_args(cls)
     for arg in args:
@@ -127,7 +125,7 @@ def _unpack(cls: Type[Any], data: Any, opt: bool = False) -> Any:
     if opt and data is None:
         return None
 
-    cls, is_opt = parse_cls(cls)
+    cls, is_opt = _parse_cls(cls)
 
     if not dataclasses.is_dataclass(cls):
         return data
@@ -142,14 +140,14 @@ def _unpack(cls: Type[Any], data: Any, opt: bool = False) -> Any:
 T = TypeVar("T", bound=DataclassInstance)
 
 
-def _unpack_response[T](cls: Type[T], data: RespPacket) -> T:
+def unpack_response[T](cls: Type[T], data: RespPacket) -> T:
     dct = json.loads(data)
     if "error" in dct:
         raise ValueError(dct["error"])
     return _unpack(cls, dct)
 
 
-def _unpack_request(data: ReqPacket) -> Requests:
+def unpack_request(data: ReqPacket) -> Requests:
     dct = json.loads(data)
     command = dct["command"]
     match command:
@@ -160,18 +158,18 @@ def _unpack_request(data: ReqPacket) -> Requests:
         case "del":
             return _unpack(DeleteRequest, dct)
         case "cred":
-            return _unpack(CredRequest, dct)
+            return _unpack(CredentialRequest, dct)
         case _:
             raise ValueError(f"Unknown command: {command!r}")
 
 
-def _pack_request(obj: Requests) -> ReqPacket:
+def pack_request(obj: Requests) -> ReqPacket:
     req = dataclasses.asdict(obj)
     req["command"] = obj.command
     return json.dumps(req)
 
 
-def _pack_response(obj: Responses) -> RespPacket:
+def pack_response(obj: Responses) -> RespPacket:
     return json.dumps(dataclasses.asdict(obj))
 
 
@@ -191,20 +189,13 @@ class TransportClient:
     def communicate(self, req: DeleteRequest) -> DeleteResponse: ...
 
     @overload
-    def communicate(self, req: CredRequest) -> CredResponse: ...
+    def communicate(self, req: CredentialRequest) -> CredentialResponse: ...
 
     def communicate(self, req: Requests) -> Responses:
-        req_data = _pack_request(req)
+        req_data = pack_request(req)
         resp_data = self._communicate(req_data)
-        match req:
-            case GetRequest():
-                return _unpack_response(GetResponse, resp_data)
-            case SetRequest():
-                return _unpack_response(SetResponse, resp_data)
-            case DeleteRequest():
-                return _unpack_response(DeleteResponse, resp_data)
-            case CredRequest():
-                return _unpack_response(CredResponse, resp_data)
+        resp_cls = req.get_reponse_cls()
+        return unpack_response(resp_cls, resp_data)
 
 
 class ProxyBackend(keyring.backend.KeyringBackend):
@@ -218,7 +209,7 @@ class ProxyBackend(keyring.backend.KeyringBackend):
         pass
 
     def get_credential(self, service: str, username: str | None) -> keyring.credentials.Credential | None:
-        result = self._transport.communicate(CredRequest(service, username)).result
+        result = self._transport.communicate(CredentialRequest(service, username)).result
         if result is None:
             return None
         return result.to_keyring_cred()
@@ -247,13 +238,13 @@ class TransportServer:
             case DeleteRequest(service, username):
                 self.backend.delete_password(service, username)
                 return DeleteResponse(True)
-            case CredRequest(service, username):
+            case CredentialRequest(service, username):
                 cred = self.backend.get_credential(service, username)
                 if cred is None:
-                    return CredResponse(None)
-                return CredResponse(Credential.from_keyring_cred(cred))
+                    return CredentialResponse(None)
+                return CredentialResponse(Credential.from_keyring_cred(cred))
 
     def handle(self, req_data: ReqPacket) -> RespPacket:
-        req = _unpack_request(req_data)
+        req = unpack_request(req_data)
         resp = self._handle(req)
-        return _pack_response(resp)
+        return pack_response(resp)
