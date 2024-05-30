@@ -3,6 +3,7 @@
 import abc
 import dataclasses
 import json
+import logging
 import typing
 from types import UnionType
 from typing import Any, ClassVar, Self, Type, TypeVar, Union, get_args, get_origin, overload
@@ -199,6 +200,14 @@ class TransportClient:
 
 
 class ProxyBackend(keyring.backend.KeyringBackend):
+
+    logfile: str = "keyring-proxy.log"
+    log: bool = False
+
+    def __init__(self):
+        super().__init__()
+        if self.log:
+            logging.basicConfig(level=logging.DEBUG, filename=self.logfile)
 
     @property
     def _transport(self):

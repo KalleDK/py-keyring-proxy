@@ -1,14 +1,14 @@
 #:schema https://json.schemastore.org/pyproject.json
 
 [project]
-name            = "keyring-proxy"
-version         = "0.1.4"
-description     = "Proxy Base for pypi keyring"
-authors         = [{ name = "Kalle M. Aagaard", email = "git@k-moeller.dk" }]
-dependencies    = ["keyring>=25.2.1"]
+name = "keyring-proxy"
+version = "0.1.5"
+description = "Proxy Base for pypi keyring"
+authors = [{ name = "Kalle M. Aagaard", email = "git@k-moeller.dk" }]
+dependencies = ["keyring>=25.2.1"]
 requires-python = ">=3.12"
-readme          = "README.md"
-license         = { text = "MIT" }
+readme = "README.md"
+license = { text = "MIT" }
 
 [project.urls]
 Repository = "https://github.com/KalleDK/py-keyring-proxy"
@@ -21,7 +21,7 @@ distribution = true
 tools = ["ruff>=0.4.6", "black>=24.4.2", "mypy>=1.10.0"]
 
 [tool.ruff]
-line-length    = 120
+line-length = 120
 target-version = "py312"
 
 [tool.black]
@@ -32,5 +32,5 @@ include = ["src", "tests"]
 
 
 [build-system]
-requires      = ["pdm-backend"]
+requires = ["pdm-backend"]
 build-backend = "pdm.backend"
