@@ -3,19 +3,14 @@ import logging
 import pathlib
 import shutil
 import subprocess
-from typing import override
-
-import jaraco.classes.properties as properties
 
 from keyring_proxy.transport import (
-    ProxyBackend,
     ReqPacket,
     RespPacket,
     TransportClient,
     TransportServer,
 )
 
-PRIORITY = 8.9
 DEFAULT_EXE_PATH = "keyring-proxy.exe"
 COMMAND_NAME = "json"
 
@@ -41,19 +36,6 @@ class RuntimeTransport(TransportClient):
         if exe_path_full is None:
             raise FileNotFoundError(f"Could not find {exe_path!r}")
         return cls(pathlib.Path(exe_path_full))
-
-
-class StdioProxyBackend(ProxyBackend):
-
-    exe = DEFAULT_EXE_PATH
-
-    @override
-    def _get_transport(self) -> TransportClient:
-        return RuntimeTransport.from_path(self.exe)
-
-    @properties.classproperty
-    def priority(cls):
-        return PRIORITY
 
 
 @dataclasses.dataclass

@@ -6,10 +6,8 @@ import pathlib
 import socket
 from typing import override
 
-import jaraco.classes.properties as properties  # type: ignore
-from keyring_proxy.transport import ProxyBackend, ReqPacket, RespPacket, TransportClient, TransportServer
+from keyring_proxy.transport import ReqPacket, RespPacket, TransportClient, TransportServer
 
-PRIORITY = 7.8
 DEFAULT_SOCKET_PATH = "/tmp/keyring-proxy.sock"
 
 logger = logging.getLogger(__name__)
@@ -79,19 +77,6 @@ class SocketClient(TransportClient):
     @classmethod
     def from_path(cls, sock: str):
         return cls(pathlib.Path(sock))
-
-
-class SocketProxyBackend(ProxyBackend):
-
-    socket: str = DEFAULT_SOCKET_PATH
-
-    @override
-    def _get_transport(self) -> TransportClient:
-        return SocketClient.from_path(self.socket)
-
-    @properties.classproperty
-    def priority(cls):
-        return PRIORITY
 
 
 @dataclasses.dataclass
