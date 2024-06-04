@@ -2,10 +2,12 @@
 
 [project]
 name = "keyring-proxy"
-version = "0.1.8"
+version = "0.1.14"
 description = "Proxy Base for pypi keyring"
 authors = [{ name = "Kalle M. Aagaard", email = "git@k-moeller.dk" }]
-dependencies = ["keyring>=25.2.1"]
+dependencies = [
+    "keyring>=25.2.1",
+]
 requires-python = ">=3.12"
 readme = "README.md"
 license = { text = "MIT" }

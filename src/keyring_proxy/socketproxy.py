@@ -8,7 +8,7 @@ from typing import override
 
 from keyring_proxy.transport import ReqPacket, RespPacket, TransportClient, TransportServer
 
-DEFAULT_SOCKET_PATH = "/tmp/keyring-proxy.sock"
+DEFAULT_SOCKET_PATH = "/tmp/keyring-proxy/keyring-proxy.sock"
 
 logger = logging.getLogger(__name__)
 

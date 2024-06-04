@@ -16,6 +16,8 @@ if typing.TYPE_CHECKING:
 else:
     DataclassInstance = object
 
+logger = logging.getLogger(__name__)
+
 
 @dataclasses.dataclass
 class Credential:
@@ -122,18 +124,17 @@ def _parse_cls(cls: Type[Any]) -> tuple[Type[Any], bool]:
     return cls, False
 
 
-def _unpack(cls: Type[Any], data: Any, opt: bool = False) -> Any:
-    if opt and data is None:
-        return None
-
+def _unpack(cls: Type[Any], data: Any) -> Any:
     cls, is_opt = _parse_cls(cls)
+    if is_opt and data is None:
+        return None
 
     if not dataclasses.is_dataclass(cls):
         return data
 
     fields = dataclasses.fields(cls)
 
-    dct = {field.name: _unpack(field.type, data[field.name], is_opt) for field in fields}
+    dct = {field.name: _unpack(field.type, data[field.name]) for field in fields}
 
     return cls(**dct)
 
@@ -207,7 +208,7 @@ class ProxyBackend(keyring.backend.KeyringBackend):
     def __init__(self):
         super().__init__()
         if self.log:
-            logging.basicConfig(level=logging.DEBUG, filename=self.logfile)
+            logging.basicConfig(level=logging.DEBUG)
 
     @property
     def _transport(self):
@@ -218,18 +219,22 @@ class ProxyBackend(keyring.backend.KeyringBackend):
         pass
 
     def get_credential(self, service: str, username: str | None) -> keyring.credentials.Credential | None:
+        logger.debug(f"get_credential({service!r}, {username!r})")
         result = self._transport.communicate(CredentialRequest(service, username)).result
         if result is None:
             return None
         return result.to_keyring_cred()
 
     def get_password(self, service: str, username: str) -> str | None:
+        logger.debug(f"get_password({service!r}, {username!r})")
         return self._transport.communicate(GetRequest(service, username)).result
 
     def set_password(self, service: str, username: str, password: str):
+        logger.debug(f"set_password({service!r}, {username!r}, {password!r})")
         self._transport.communicate(SetRequest(service, username, password))
 
     def delete_password(self, service: str, username: str):
+        logger.debug(f"delete_password({service!r}, {username!r})")
         self._transport.communicate(DeleteRequest(service, username))
 
 
