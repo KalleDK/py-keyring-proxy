@@ -11,7 +11,8 @@ tasks:
       - git push
   devrel:
     cmds:
-      - git add . && git commit -m "devrel" || true
+      - git add .
+      - if git commit --dry-run --short; then git commit -m "devrel"; else echo nothing changed; fi
       - bumpversion build
       - pdm publish
       - git push
