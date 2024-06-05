@@ -3,7 +3,7 @@ version: '3'
 tasks:
   release:
     cmds:
-      - git add . && git commit -m "Release"
+      - git add . && git commit -m "Release" || true
       - bumpversion patch
       - pdm publish
       - git push
