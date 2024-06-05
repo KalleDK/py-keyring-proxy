@@ -4,8 +4,8 @@ tasks:
   release:
     cmds:
       - git add . && git commit -m "Release"
-      - bumpversion minor
-      - pdm patch
+      - bumpversion patch
+      - pdm publish
       - git push
 
     
