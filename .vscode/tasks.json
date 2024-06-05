@@ -10,6 +10,14 @@
                 "release"
             ],
             "problemMatcher": []
+        },
+        {
+            "label": "sync",
+            "command": "task",
+            "args": [
+                "sync"
+            ],
+            "problemMatcher": []
         }
     ]
 }
