@@ -219,23 +219,39 @@ class ProxyBackend(keyring.backend.KeyringBackend):
         pass
 
     def get_credential(self, service: str, username: str | None) -> keyring.credentials.Credential | None:
-        logger.debug(f"get_credential({service!r}, {username!r})")
-        result = self._transport.communicate(CredentialRequest(service, username)).result
-        if result is None:
+        try:
+            logger.debug(f"get_credential({service!r}, {username!r})")
+            result = self._transport.communicate(CredentialRequest(service, username)).result
+            if result is None:
+                return None
+            return result.to_keyring_cred()
+        except Exception as e:
+            logger.exception(f"Error getting credential: {e}")
             return None
-        return result.to_keyring_cred()
 
     def get_password(self, service: str, username: str) -> str | None:
-        logger.debug(f"get_password({service!r}, {username!r})")
-        return self._transport.communicate(GetRequest(service, username)).result
+        try:
+            logger.debug(f"get_password({service!r}, {username!r})")
+            return self._transport.communicate(GetRequest(service, username)).result
+        except Exception as e:
+            logger.exception(f"Error getting password: {e}")
+            return None
 
     def set_password(self, service: str, username: str, password: str):
-        logger.debug(f"set_password({service!r}, {username!r}, {password!r})")
-        self._transport.communicate(SetRequest(service, username, password))
+        try:
+            logger.debug(f"set_password({service!r}, {username!r}, {password!r})")
+            self._transport.communicate(SetRequest(service, username, password))
+        except Exception as e:
+            logger.exception(f"Error setting password: {e}")
+            return None
 
     def delete_password(self, service: str, username: str):
-        logger.debug(f"delete_password({service!r}, {username!r})")
-        self._transport.communicate(DeleteRequest(service, username))
+        try:
+            logger.debug(f"delete_password({service!r}, {username!r})")
+            self._transport.communicate(DeleteRequest(service, username))
+        except Exception as e:
+            logger.exception(f"Error deleting password: {e}")
+            return None
 
 
 @dataclasses.dataclass
