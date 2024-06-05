@@ -5,7 +5,7 @@ tasks:
     cmds:
       - git add . && git commit -m "Release"
       - bumpversion minor
-      - pdm publish
+      - pdm patch
       - git push
 
     
