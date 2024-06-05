@@ -1,6 +1,6 @@
 version: '3'
 
-env:
+vars:
   VENV_NAME: proxy
 
 tasks:
@@ -12,18 +12,23 @@ tasks:
       - git push
   create_venv:
     cmds:
-      - python -m venv ~/.local/share/venv/${VENV_NAME}
+      - python -m venv ~/.local/share/venv/{{.VENV_NAME}}
     status:
-      - test -f ~/.local/share/venv/${VENV_NAME}/bin/python
+      - test -f ~/.local/share/venv/{{.VENV_NAME}}/bin/python
   use_venv:
     deps:
       - create_venv
     cmds:
-      - pdm use -i ~/.local/share/venv/${VENV_NAME}/bin/python
+      - pdm use -i ~/.local/share/venv/{{.VENV_NAME}}/bin/python
     status:
-      - test $(dirname $(dirname $(pdm info --python))) -ef ~/.local/share/venv/${VENV_NAME} 
+      - test $(dirname $(dirname $(pdm info --python))) -ef ~/.local/share/venv/{{.VENV_NAME}}
   sync:
     deps:
       - use_venv
     cmds:
+      - pwd
       - pdm sync --without tools --only-keep
+  init:
+    deps:
+      - sync
+    
