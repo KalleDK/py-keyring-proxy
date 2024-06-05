@@ -254,7 +254,7 @@ class ProxyBackend(keyring.backend.KeyringBackend):
             return None
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(kw_only=True)
 class TransportServer:
     backend: keyring.backend.KeyringBackend = dataclasses.field(default_factory=keyring.get_keyring)
 
