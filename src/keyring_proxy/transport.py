@@ -226,7 +226,7 @@ class ProxyBackend(keyring.backend.KeyringBackend):
                 return None
             return result.to_keyring_cred()
         except Exception as e:
-            logger.exception(f"Error getting credential: {e}")
+            logger.info(f"Error getting credential: {e}")
             return None
 
     def get_password(self, service: str, username: str) -> str | None:
@@ -234,7 +234,7 @@ class ProxyBackend(keyring.backend.KeyringBackend):
             logger.debug(f"get_password({service!r}, {username!r})")
             return self._transport.communicate(GetRequest(service, username)).result
         except Exception as e:
-            logger.exception(f"Error getting password: {e}")
+            logger.info(f"Error getting password: {e}")
             return None
 
     def set_password(self, service: str, username: str, password: str):
@@ -242,7 +242,7 @@ class ProxyBackend(keyring.backend.KeyringBackend):
             logger.debug(f"set_password({service!r}, {username!r}, {password!r})")
             self._transport.communicate(SetRequest(service, username, password))
         except Exception as e:
-            logger.exception(f"Error setting password: {e}")
+            logger.info(f"Error setting password: {e}")
             return None
 
     def delete_password(self, service: str, username: str):
@@ -250,7 +250,7 @@ class ProxyBackend(keyring.backend.KeyringBackend):
             logger.debug(f"delete_password({service!r}, {username!r})")
             self._transport.communicate(DeleteRequest(service, username))
         except Exception as e:
-            logger.exception(f"Error deleting password: {e}")
+            logger.info(f"Error deleting password: {e}")
             return None
 
 
