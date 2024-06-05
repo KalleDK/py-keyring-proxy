@@ -6,8 +6,13 @@ vars:
 tasks:
   release:
     cmds:
-      - git add . && git commit -m "Release" || true
       - bumpversion patch
+      - pdm publish
+      - git push
+  devrel:
+    cmds:
+      - git add . && git commit -m "devrel" || true
+      - bumpversion build
       - pdm publish
       - git push
   create_venv:
