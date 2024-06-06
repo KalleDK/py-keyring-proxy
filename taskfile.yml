@@ -2,6 +2,10 @@ version: '3'
 
 vars:
   VENV_NAME: proxy
+  VENV_STORE: ~/.local/share/venv
+  VENV_DIR: "{{.VENV_STORE}}/{{.VENV_NAME}}"
+  VENV_PYTHON: "{{.VENV_DIR}}/bin/python"
+  DEPS: []
 
 tasks:
   release:
@@ -18,27 +22,31 @@ tasks:
       - git push
   update:
     cmds:
-      - echo nothing to do
+      - for: { var: DEPS }
+        cmd: pdm add "{{.ITEM}}"
+      - git add pdm.lock pyproject.toml
+      - if git commit --dry-run --short; then git commit -m "Updated deps"; else echo nothing updated; fi
   create_venv:
     cmds:
-      - python -m venv ~/.local/share/venv/{{.VENV_NAME}}
+      - python -m venv {{.VENV_DIR}}
     status:
-      - test -f ~/.local/share/venv/{{.VENV_NAME}}/bin/python
+      - test -f {{.VENV_PYTHON}}
   use_venv:
     deps:
       - create_venv
     cmds:
-      - pdm use -i ~/.local/share/venv/{{.VENV_NAME}}/bin/python
+      - pdm use -i {{.VENV_PYTHON}}
     status:
       - test -f .pdm-python
-      - test $(dirname $(dirname $(pdm info --python))) -ef ~/.local/share/venv/{{.VENV_NAME}}
+      - test $(dirname $(dirname $(pdm info --python))) -ef {{.VENV_DIR}}
   sync:
     deps:
       - use_venv
     cmds:
-      - pwd
       - pdm sync --without tools --only-keep
   init:
     deps:
       - sync
-    
+    cmds:
+      - for: { var: DEPS }
+        cmd: pdm add -e ../py-{{.ITEM}} --dev
