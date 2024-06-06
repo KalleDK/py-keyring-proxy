@@ -30,6 +30,7 @@ tasks:
     cmds:
       - pdm use -i ~/.local/share/venv/{{.VENV_NAME}}/bin/python
     status:
+      - test -f .pdm-python
       - test $(dirname $(dirname $(pdm info --python))) -ef ~/.local/share/venv/{{.VENV_NAME}}
   sync:
     deps:
