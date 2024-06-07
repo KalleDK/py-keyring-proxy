@@ -11,6 +11,7 @@ tasks:
   release:
     cmds:
       - bumpversion patch
+      - task: sync
       - pdm publish
       - git push
   devrel:
@@ -18,6 +19,7 @@ tasks:
       - git add .
       - if git commit --dry-run --short; then git commit -m "devrel"; else echo nothing changed; fi
       - bumpversion build
+      - task: sync
       - pdm publish
       - git push
   update:
@@ -40,13 +42,12 @@ tasks:
       - test -f .pdm-python
       - test $(dirname $(dirname $(pdm info --python))) -ef {{.VENV_DIR}}
   sync:
-    deps:
-      - use_venv
     cmds:
       - pdm sync --without tools --only-keep
   init:
     deps:
-      - sync
+      - use_venv
     cmds:
+      - task: sync
       - for: { var: DEPS }
         cmd: pdm add -e ../py-{{.ITEM}} --dev
