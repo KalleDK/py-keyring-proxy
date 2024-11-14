@@ -196,12 +196,16 @@ class SocketServer(TransportServer):
     sockmgr: SocketMgr = dataclasses.field(default_factory=default_socket_mgr_server)
 
     async def _handle_stream(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
-        conn = Connection.from_stream((reader, writer))
-        req = await conn.recv_packet()
-        logger.debug(f"Received request: {req}")
-        resp = self.handle(req)
-        logger.debug(f"Sending response: {resp}")
-        await conn.send_packet(resp)
+        logger.info("Handling new connection")
+        try:
+            conn = Connection.from_stream((reader, writer))
+            req = await conn.recv_packet()
+            logger.debug(f"Received request: {req}")
+            resp = self.handle(req)
+            logger.debug(f"Sending response: {resp}")
+            await conn.send_packet(resp)
+        except Exception as e:
+            logger.exception("Error handling request")
 
     async def serve_forever(self):
         async with self.sockmgr.create_server(self._handle_stream) as server:
