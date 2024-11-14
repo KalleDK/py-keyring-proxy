@@ -48,7 +48,7 @@ class Connection:
             req_data = await self.recv_packet()
             logger.debug(f"Received request: {req_data}")
             req = packets.unpack(req_data)
-            resp = req.get_response(backend)
+            resp = req.generate_response(backend)
             resp_data = resp.model_dump_json()
             logger.debug(f"Sending response: {resp_data}")
             await self.send_packet(resp_data)

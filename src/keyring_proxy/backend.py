@@ -7,7 +7,8 @@ from typing import Any, Callable, Coroutine
 import keyring.backend
 import keyring.credentials
 
-from keyring_proxy.transport import CredentialRequest, DeleteRequest, GetRequest, SetRequest, TransportClient
+from keyring_proxy.packets import CredentialRequest, DeleteRequest, GetRequest, SetRequest
+from keyring_proxy.transport import TransportClient
 
 logger = logging.getLogger(__name__)
 
