@@ -3,6 +3,7 @@ import asyncio
 import dataclasses
 import logging
 import sys
+from operator import is_
 from typing import BinaryIO, override
 
 import keyring
@@ -97,9 +98,11 @@ class IOConnection(Connection):
     def readexactly(self, amount_expected: int) -> bytes:
         logger.info(f"Reading {amount_expected} bytes")
         encoded_resp = b""
-        while len(encoded_resp) < amount_expected:
+        while len(encoded_resp) < amount_expected and not self.is_closing():
             encoded_resp += self._reader.read(amount_expected - len(encoded_resp))
             logger.debug(f"Read {len(encoded_resp)} bytes")
+        if self.is_closing():
+            raise EOFError("Connection closed")
         return encoded_resp
 
     @override
@@ -116,7 +119,8 @@ class IOConnection(Connection):
 
     @override
     async def recv_packet(self):
-        amount_expected = int.from_bytes(self.readexactly(4), "big")
+        packet_size = self.readexactly(4)
+        amount_expected = int.from_bytes(packet_size, "big")
         return self.readexactly(amount_expected).decode()
 
     @override
