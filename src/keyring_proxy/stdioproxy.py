@@ -41,10 +41,7 @@ class StdioClient(TransportClient):
             logger.info("Closing connection")
 
             logger.info("stdin")
-            if proc.stdin is not None:
-                stdin = proc._feed_stdin(None)
-            else:
-                stdin = proc._noop()
+
             logger.info("stdout")
             if proc.stdout is not None:
                 stdout = proc._read_stream(1)
@@ -57,7 +54,7 @@ class StdioClient(TransportClient):
                 stderr = proc._noop()
 
             logger.info("Waiting for process to finish")
-            await stdin
+            proc.stdin.write_eof()
             proc.stdin.close()
             logger.info("Waiting for process to finish")
             await stdout
