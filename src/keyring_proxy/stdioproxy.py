@@ -58,6 +58,7 @@ class StdioClient(TransportClient):
 
             logger.info("Waiting for process to finish")
             await stdin
+            proc.stdin.close()
             logger.info("Waiting for process to finish")
             await stdout
             logger.info("Waiting for process to finish")
