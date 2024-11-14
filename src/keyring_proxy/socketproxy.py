@@ -6,9 +6,10 @@ import ipaddress
 import logging
 import pathlib
 import sys
-from typing import Any, Callable, Coroutine, override
+from typing import Any, AsyncGenerator, Callable, Coroutine, override
 
-from keyring_proxy.transport import ReqPacket, RespPacket, TransportClient, TransportServer
+from keyring_proxy.connection import AsyncConnection, Connection
+from keyring_proxy.transport import TransportClient, TransportServer
 
 DEFAULT_UNIX_PATH = "/tmp/keyring-proxy/keyring-proxy.sock"
 DEFAULT_TCP_PORT = 9731
@@ -22,32 +23,6 @@ SOCKET_ADDR = str | pathlib.Path | tuple[ipaddress.IPv4Address | ipaddress.IPv6A
 
 
 @dataclasses.dataclass
-class Connection:
-    _reader: asyncio.StreamReader
-    _writer: asyncio.StreamWriter
-
-    async def send_packet(self, data: str):
-        encoded_data = data.encode()
-        amount_sending = len(encoded_data)
-        self._writer.write(amount_sending.to_bytes(4, "big"))
-        self._writer.write(encoded_data)
-        await self._writer.drain()
-
-    async def recv_packet(self):
-        amount_expected = int.from_bytes(await self._reader.readexactly(4), "big")
-        return (await self._reader.readexactly(amount_expected)).decode()
-
-    async def close(self):
-        self._writer.close()
-        await self._writer.wait_closed()
-
-    @classmethod
-    def from_stream(cls, io: tuple[asyncio.StreamReader, asyncio.StreamWriter]):
-        reader, writer = io
-        return cls(reader, writer)
-
-
-@dataclasses.dataclass
 class SocketMgr:
     @abc.abstractmethod
     async def _create_server(
@@ -55,7 +30,7 @@ class SocketMgr:
     ) -> asyncio.AbstractServer: ...
 
     @abc.abstractmethod
-    async def _connect_client(self) -> Connection:
+    async def _connect_client(self) -> AsyncConnection:
         ...
         # return await asyncio.open_connection("localhost", 8888)
 
@@ -88,8 +63,8 @@ class UnixSocket(SocketMgr):
     path: pathlib.Path
 
     @override
-    async def _connect_client(self) -> Connection:
-        return Connection.from_stream(await asyncio.open_unix_connection(str(self.path)))
+    async def _connect_client(self) -> AsyncConnection:
+        return AsyncConnection.from_stream(await asyncio.open_unix_connection(str(self.path)))
 
     @override
     async def _create_server(
@@ -110,8 +85,8 @@ class TcpSocket(SocketMgr):
     port: int
 
     @override
-    async def _connect_client(self) -> Connection:
-        return Connection.from_stream(await asyncio.open_connection(str(self.host), self.port))
+    async def _connect_client(self) -> AsyncConnection:
+        return AsyncConnection.from_stream(await asyncio.open_connection(str(self.host), self.port))
 
     @override
     async def _create_server(
@@ -177,14 +152,10 @@ class SocketClient(TransportClient):
     sockmgr: SocketMgr = dataclasses.field(default_factory=default_socket_mgr_client)
 
     @override
-    async def _communicate(self, req: ReqPacket) -> RespPacket:
+    @contextlib.asynccontextmanager
+    async def _connect(self) -> AsyncGenerator[Connection, None]:
         async with self.sockmgr.connect() as conn:
-            logger.debug(f"Sending request: {req}")
-            await conn.send_packet(req)
-
-            resp = await conn.recv_packet()
-            logger.debug(f"Received response: {resp}")
-            return resp
+            yield conn
 
     @classmethod
     def from_path(cls, addr: str | pathlib.Path | tuple[ipaddress.IPv4Address | ipaddress.IPv6Address | str, int]):
@@ -197,15 +168,8 @@ class SocketServer(TransportServer):
 
     async def _handle_stream(self, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         logger.info("Handling new connection")
-        try:
-            conn = Connection.from_stream((reader, writer))
-            req = await conn.recv_packet()
-            logger.debug(f"Received request: {req}")
-            resp = self.handle(req)
-            logger.debug(f"Sending response: {resp}")
-            await conn.send_packet(resp)
-        except Exception as e:
-            logger.exception("Error handling request")
+        conn = AsyncConnection.from_stream((reader, writer))
+        await self._handle_conn(conn)
 
     async def serve_forever(self):
         async with self.sockmgr.create_server(self._handle_stream) as server:

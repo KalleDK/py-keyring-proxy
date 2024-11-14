@@ -1,13 +1,15 @@
 import asyncio
+import contextlib
 import dataclasses
 import logging
 import pathlib
 import shutil
 import subprocess
+import sys
+from typing import AsyncGenerator, BinaryIO, override
 
+from keyring_proxy.connection import AsyncConnection, Connection, IOConnection
 from keyring_proxy.transport import (
-    ReqPacket,
-    RespPacket,
     TransportClient,
     TransportServer,
 )
@@ -19,22 +21,24 @@ logger = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass
-class RuntimeTransport(TransportClient):
+class StdioClient(TransportClient):
     exe_path: pathlib.Path
 
-    async def _communicate(self, req: ReqPacket) -> RespPacket:
+    @override
+    @contextlib.asynccontextmanager
+    async def _connect(self) -> AsyncGenerator[Connection, None]:
         proc = await asyncio.create_subprocess_exec(
-            self.exe_path, COMMAND_NAME, req, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            str(self.exe_path),
+            COMMAND_NAME,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
         )
-        stdout, stderr = await proc.communicate()
-        if proc.returncode != 0 and proc.returncode is not None:
-            raise subprocess.CalledProcessError(proc.returncode, self.exe_path, stdout, stderr)
-
-        lines = [line for line in stdout.decode().splitlines() if line != ""]
-        result = lines.pop()
-        for line in lines:
-            logger.info(line)
-        return result
+        if proc.stdin is None or proc.stdout is None:
+            raise ValueError("Could not open stdin/stdout for subprocess")
+        try:
+            yield AsyncConnection(proc.stdout, proc.stdin)
+        finally:
+            await proc.wait()
 
     @classmethod
     def from_path(cls, exe_path: str):
@@ -45,5 +49,19 @@ class RuntimeTransport(TransportClient):
 
 
 @dataclasses.dataclass
-class StdioProxyFrontend(TransportServer):
-    pass
+class StdioServer(TransportServer):
+    stdin: BinaryIO
+    stdout: BinaryIO
+
+    async def serve_forever(self):
+        conn = IOConnection(self.stdin, self.stdout)
+        while not conn.is_closing():
+            try:
+                logger.info("Handling new connection")
+                await self._handle_conn(conn)
+            except Exception as e:
+                logger.exception("Error handling request")
+
+    @classmethod
+    def from_stdio(cls):
+        return cls(sys.stdin.buffer, sys.stdout.buffer)
