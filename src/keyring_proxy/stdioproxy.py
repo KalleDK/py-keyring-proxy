@@ -1,3 +1,4 @@
+import asyncio
 import dataclasses
 import logging
 import pathlib
@@ -21,10 +22,15 @@ logger = logging.getLogger(__name__)
 class RuntimeTransport(TransportClient):
     exe_path: pathlib.Path
 
-    def _communicate(self, req: ReqPacket) -> RespPacket:
-        r = subprocess.run([self.exe_path, COMMAND_NAME, req], capture_output=True)
-        r.check_returncode()
-        lines = [line for line in r.stdout.decode().splitlines() if line != ""]
+    async def _communicate(self, req: ReqPacket) -> RespPacket:
+        proc = await asyncio.create_subprocess_exec(
+            self.exe_path, COMMAND_NAME, req, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        stdout, stderr = await proc.communicate()
+        if proc.returncode != 0 and proc.returncode is not None:
+            raise subprocess.CalledProcessError(proc.returncode, self.exe_path, stdout, stderr)
+
+        lines = [line for line in stdout.decode().splitlines() if line != ""]
         result = lines.pop()
         for line in lines:
             logger.info(line)

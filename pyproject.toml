@@ -5,7 +5,7 @@ name = "keyring-proxy"
 version = "0.2.14.10"
 description = "Proxy Base for pypi keyring"
 authors = [{ name = "Kalle M. Aagaard", email = "git@k-moeller.dk" }]
-dependencies = ["keyring>=25.5.0"]
+dependencies = ["keyring>=25.5.0", "pydantic>=2.9.2"]
 requires-python = ">=3.12"
 readme = "README.md"
 license = { text = "MIT" }
@@ -31,4 +31,7 @@ build-backend = "pdm.backend"
 tools = [
     "ruff>=0.7.3",
     "mypy>=1.13.0",
+]
+dev = [
+    "keyrings-alt>=5.0.2",
 ]
