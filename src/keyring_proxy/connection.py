@@ -95,9 +95,11 @@ class IOConnection(Connection):
     _writer: BinaryIO
 
     def readexactly(self, amount_expected: int) -> bytes:
+        logger.info(f"Reading {amount_expected} bytes")
         encoded_resp = b""
         while len(encoded_resp) < amount_expected:
             encoded_resp += self._reader.read(amount_expected - len(encoded_resp))
+            logger.debug(f"Read {len(encoded_resp)} bytes")
         return encoded_resp
 
     @override
@@ -115,6 +117,7 @@ class IOConnection(Connection):
     @override
     async def recv_packet(self):
         self._reader.read()
+        logger.debug("Reading packet length")
         amount_expected = int.from_bytes(self.readexactly(4), "big")
         return self.readexactly(amount_expected).decode()
 
