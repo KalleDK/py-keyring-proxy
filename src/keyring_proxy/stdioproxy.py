@@ -39,8 +39,31 @@ class StdioClient(TransportClient):
             yield AsyncConnection(proc.stdout, proc.stdin)
         finally:
             logger.info("Closing connection")
-            await proc.communicate()
-            # await proc.wait()
+
+            logger.info("stdin")
+            if proc.stdin is not None:
+                stdin = proc._feed_stdin(None)
+            else:
+                stdin = proc._noop()
+            logger.info("stdout")
+            if proc.stdout is not None:
+                stdout = proc._read_stream(1)
+            else:
+                stdout = proc._noop()
+            logger.info("stderr")
+            if proc.stderr is not None:
+                stderr = proc._read_stream(2)
+            else:
+                stderr = proc._noop()
+
+            logger.info("Waiting for process to finish")
+            await stdin
+            logger.info("Waiting for process to finish")
+            await stdout
+            logger.info("Waiting for process to finish")
+            await stderr
+            logger.info("Waiting for process to finish")
+            await proc.wait()
             logger.info("Connection closed")
 
     @classmethod

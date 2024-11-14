@@ -4,6 +4,7 @@ import dataclasses
 import logging
 import sys
 from operator import is_
+from time import sleep
 from typing import BinaryIO, override
 
 import keyring
@@ -99,8 +100,12 @@ class IOConnection(Connection):
         logger.info(f"Reading {amount_expected} bytes")
         encoded_resp = b""
         while len(encoded_resp) < amount_expected and not self.is_closing():
-            encoded_resp += self._reader.read(amount_expected - len(encoded_resp))
+            part = self._reader.read(amount_expected - len(encoded_resp))
+            encoded_resp += part
             logger.debug(f"Read {len(encoded_resp)} bytes")
+            if len(part) == 0:
+                sleep(1)
+
         if self.is_closing():
             raise EOFError("Connection closed")
         return encoded_resp
