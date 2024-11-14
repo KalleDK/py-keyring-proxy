@@ -99,14 +99,14 @@ class IOConnection(Connection):
     def readexactly(self, amount_expected: int) -> bytes:
         logger.info(f"Reading {amount_expected} bytes")
         encoded_resp = b""
-        while len(encoded_resp) < amount_expected and not self.is_closing():
+        while len(encoded_resp) < amount_expected and not self._reader.closed:
             part = self._reader.read(amount_expected - len(encoded_resp))
             encoded_resp += part
             logger.debug(f"Read {len(encoded_resp)} bytes")
             if len(part) == 0:
                 sleep(1)
 
-        if self.is_closing():
+        if self._reader.closed:
             raise EOFError("Connection closed")
         return encoded_resp
 
