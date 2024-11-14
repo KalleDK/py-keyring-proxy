@@ -60,7 +60,7 @@ class StdioServer(TransportServer):
                 logger.info("Handling new connection")
                 await self._handle_conn(conn)
             except Exception as e:
-                logger.exception("Error handling request")
+                logger.exception(f"Error handling request {e}")
 
     @classmethod
     def from_stdio(cls):

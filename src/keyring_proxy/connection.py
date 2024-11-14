@@ -3,7 +3,7 @@ import asyncio
 import dataclasses
 import logging
 import sys
-from typing import Any, BinaryIO, override
+from typing import BinaryIO, override
 
 import keyring
 import keyring.backend

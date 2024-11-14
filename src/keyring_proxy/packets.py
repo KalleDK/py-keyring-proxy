@@ -4,20 +4,16 @@ import abc
 import json
 import logging
 from typing import (
-    Annotated,
     Any,
-    ClassVar,
     Literal,
     Protocol,
     Self,
-    Type,
-    Union,
     override,
 )
 
 import keyring.backend
 import keyring.credentials
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
