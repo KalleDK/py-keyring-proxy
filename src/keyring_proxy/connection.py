@@ -116,8 +116,6 @@ class IOConnection(Connection):
 
     @override
     async def recv_packet(self):
-        self._reader.read()
-        logger.debug("Reading packet length")
         amount_expected = int.from_bytes(self.readexactly(4), "big")
         return self.readexactly(amount_expected).decode()
 
