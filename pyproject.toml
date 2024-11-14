@@ -2,7 +2,7 @@
 
 [project]
 name = "keyring-proxy"
-version = "0.2.14.23"
+version = "0.2.14.24"
 description = "Proxy Base for pypi keyring"
 authors = [{ name = "Kalle M. Aagaard", email = "git@k-moeller.dk" }]
 dependencies = ["keyring>=25.5.0", "pydantic>=2.9.2"]
