@@ -95,6 +95,7 @@ class UnixSocket(SocketMgr):
     async def _create_server(
         self, handle: Callable[[asyncio.StreamReader, asyncio.StreamWriter], Coroutine[Any, Any, Any]]
     ):
+        logger.info(f"Creating unix server on {self.path}")
         return await asyncio.start_unix_server(handle, path=str(self.path))
 
     @override
@@ -116,6 +117,7 @@ class TcpSocket(SocketMgr):
     async def _create_server(
         self, handle: Callable[[asyncio.StreamReader, asyncio.StreamWriter], Coroutine[Any, Any, Any]]
     ):
+        logger.info(f"Creating tcp server on {self.host}:{self.port}")
         return await asyncio.start_server(handle, host=str(self.host), port=self.port)
 
 
