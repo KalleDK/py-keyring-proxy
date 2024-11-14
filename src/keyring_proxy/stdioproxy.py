@@ -39,7 +39,8 @@ class StdioClient(TransportClient):
             yield AsyncConnection(proc.stdout, proc.stdin)
         finally:
             logger.info("Closing connection")
-            proc.terminate()
+            await proc.communicate()
+            logger.info("Connection closed")
 
     @classmethod
     def from_path(cls, exe_path: str):
