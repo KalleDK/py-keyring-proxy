@@ -63,6 +63,10 @@ class ResponseBase[T](BaseModel):
     result: T
 
 
+class EOTResponse(ResponseBase[Literal[True]]):
+    cmd: Literal["eot"] = "eot"
+
+
 class DeleteResponse(ResponseBase[bool]):
     cmd: Literal["del"] = "del"
 
@@ -104,6 +108,18 @@ class RequestBase[T: Response](BaseModel):
 
     @abc.abstractmethod
     def unpack_response(self, data: str) -> T: ...
+
+
+class EOTRequest(RequestBase[EOTResponse]):
+    cmd: Literal["eot"] = "eot"
+
+    @override
+    def unpack_response(self, data: str) -> EOTResponse:
+        return EOTResponse.model_validate_json(data)
+
+    @override
+    def generate_response(self, backend: keyring.backend.KeyringBackend) -> EOTResponse:
+        return EOTResponse(result=True)
 
 
 class DeleteRequest(RequestBase[DeleteResponse]):

@@ -44,7 +44,7 @@ class Connection:
             raise ValueError(f"Expected response command {req.cmd!r}, got {resp.cmd!r}")
         return resp
 
-    async def handle_request(self, backend: keyring.backend.KeyringBackend):
+    async def handle_request(self, backend: keyring.backend.KeyringBackend) -> bool:
         logger.info("Handling new connection")
         try:
             req_data = await self.recv_packet()
@@ -54,8 +54,10 @@ class Connection:
             resp_data = resp.model_dump_json()
             logger.debug(f"Sending response: {resp_data}")
             await self.send_packet(resp_data)
+            return not isinstance(req, packets.EOTRequest)
         except Exception as e:
             logger.exception(f"Error handling request {e}")
+        return True
 
 
 @dataclasses.dataclass

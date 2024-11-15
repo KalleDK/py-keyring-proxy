@@ -57,12 +57,7 @@ class StdioServer(TransportServer):
 
     async def serve_forever(self):
         conn = IOConnection(self.stdin, self.stdout)
-        # while not conn.is_closing():
-        try:
-            logger.info("Handling new connection")
-            await self._handle_conn(conn)
-        except Exception as e:
-            logger.exception(f"Error handling request {e}")
+        await self._handle_conn(conn)
 
     @classmethod
     def from_stdio(cls):
