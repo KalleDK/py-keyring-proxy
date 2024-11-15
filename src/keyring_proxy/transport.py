@@ -31,7 +31,9 @@ class TransportClient:
 
     async def communicate[T: packets.Response](self, req: packets.Request[T]) -> T:
         async with self.connect() as conn:
-            return await conn.send_request(req)
+            response = await conn.send_request(req)
+            await conn.send_request(packets.EOTRequest())
+            return response
 
 
 @dataclasses.dataclass(kw_only=True)
