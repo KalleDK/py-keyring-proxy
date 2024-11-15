@@ -15,6 +15,8 @@ import keyring.backend
 import keyring.credentials
 from pydantic import BaseModel
 
+from keyring_proxy._version import __version__
+
 logger = logging.getLogger(__name__)
 
 
@@ -67,6 +69,10 @@ class EOTResponse(ResponseBase[Literal[True]]):
     cmd: Literal["eot"] = "eot"
 
 
+class SOTResponse(ResponseBase[str]):
+    cmd: Literal["sot"] = "sot"
+
+
 class DeleteResponse(ResponseBase[bool]):
     cmd: Literal["del"] = "del"
 
@@ -108,6 +114,19 @@ class RequestBase[T: Response](BaseModel):
 
     @abc.abstractmethod
     def unpack_response(self, data: str) -> T: ...
+
+
+class SOTRequest(RequestBase[SOTResponse]):
+    cmd: Literal["sot"] = "sot"
+    version: str = __version__
+
+    @override
+    def unpack_response(self, data: str) -> SOTResponse:
+        return SOTResponse.model_validate_json(data)
+
+    @override
+    def generate_response(self, backend: keyring.backend.KeyringBackend) -> SOTResponse:
+        return SOTResponse(result=__version__)
 
 
 class EOTRequest(RequestBase[EOTResponse]):

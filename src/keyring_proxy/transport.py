@@ -25,15 +25,16 @@ class TransportClient:
     async def connect(self):
         async with self._connect() as conn:
             try:
+                sot = await conn.send_request(packets.SOTRequest())
+                logger.info(f"Connected to server: {sot}")
                 yield conn
             finally:
+                await conn.send_request(packets.EOTRequest())
                 await conn.close()
 
     async def communicate[T: packets.Response](self, req: packets.Request[T]) -> T:
         async with self.connect() as conn:
-            response = await conn.send_request(req)
-            await conn.send_request(packets.EOTRequest())
-            return response
+            return await conn.send_request(req)
 
 
 @dataclasses.dataclass(kw_only=True)
