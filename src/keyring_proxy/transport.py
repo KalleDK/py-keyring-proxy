@@ -19,7 +19,9 @@ logger = logging.getLogger(__name__)
 class TransportClient:
     @abc.abstractmethod
     @contextlib.asynccontextmanager
-    async def _connect(self) -> AsyncGenerator[Connection, None]: ...
+    async def _connect(self) -> AsyncGenerator[Connection, None]:
+        raise Exception("Not implemented")
+        yield
 
     @contextlib.asynccontextmanager
     async def connect(self):

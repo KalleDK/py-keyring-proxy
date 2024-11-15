@@ -50,12 +50,8 @@ class SocketMgr:
         self, handle: Callable[[asyncio.StreamReader, asyncio.StreamWriter], Coroutine[Any, Any, Any]]
     ):
         await self._pre_bind()
-        server = await self._create_server(handle)
-        try:
+        async with await self._create_server(handle) as server:
             yield server
-        finally:
-            server.close()
-            await server.wait_closed()
 
 
 @dataclasses.dataclass
@@ -64,12 +60,16 @@ class UnixSocket(SocketMgr):
 
     @override
     async def _connect_client(self) -> AsyncConnection:
+        if sys.platform == "win32":
+            raise NotImplementedError("Unix sockets are not supported on Windows")
         return AsyncConnection.from_stream(await asyncio.open_unix_connection(str(self.path)))
 
     @override
     async def _create_server(
         self, handle: Callable[[asyncio.StreamReader, asyncio.StreamWriter], Coroutine[Any, Any, Any]]
     ):
+        if sys.platform == "win32":
+            raise NotImplementedError("Unix sockets are not supported on Windows")
         logger.info(f"Creating unix server on {self.path}")
         return await asyncio.start_unix_server(handle, path=str(self.path))
 
