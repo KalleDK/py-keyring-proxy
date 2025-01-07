@@ -50,3 +50,7 @@ class TransportServer:
     async def _handle_conn(self, conn: Connection):
         while (await conn.handle_request(self.backend)) and not conn.is_closing():
             pass
+        try:
+            await conn.close()
+        except Exception as e:
+            logger.exception(f"Error closing connection: {e}")

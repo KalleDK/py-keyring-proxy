@@ -81,7 +81,11 @@ class AsyncConnection(Connection):
 
     @override
     async def close(self):
-        self._writer.close()
+        try:
+            await self._writer.drain()
+            self._writer.close()
+        except Exception as e:
+            logger.exception(f"Error closing connection: {e}")
         await self._writer.wait_closed()
 
     @classmethod
