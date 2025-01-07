@@ -14,7 +14,6 @@ from keyring_proxy.transport import (
     TransportServer,
 )
 
-DEFAULT_EXE_PATH = "keyring-proxy.exe"
 COMMAND_NAME = "json"
 
 logger = logging.getLogger(__name__)
