@@ -6,6 +6,9 @@ serialize = [
 	"{major}.{minor}.{patch}.{build}",
 	"{major}.{minor}.{patch}",
 ]
+pre_commit_hooks = [
+	"uv lock",
+]
 
 [[tool.bumpversion.files]]
 filename = "pyproject.toml"
