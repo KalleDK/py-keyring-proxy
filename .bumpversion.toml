@@ -8,6 +8,7 @@ serialize = [
 ]
 pre_commit_hooks = [
 	"uv lock",
+	"git add uv.lock",
 ]
 
 [[tool.bumpversion.files]]
