@@ -48,5 +48,5 @@ class TransportServer:
         raise NotImplementedError
 
     async def _handle_conn(self, conn: Connection):
-        while await conn.handle_request(self.backend):
+        while (await conn.handle_request(self.backend)) and not conn.is_closing():
             pass
