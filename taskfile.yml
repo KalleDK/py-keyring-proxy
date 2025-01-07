@@ -14,7 +14,7 @@ tasks:
     generates:
       - dist
     cmds:
-      - mkdir dist
+      - '{{.SHELL}} mkdir dist'
   publish:
     deps:
       - build
