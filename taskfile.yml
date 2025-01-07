@@ -19,7 +19,7 @@ tasks:
     cmds:
       - git add .
       - if git commit --dry-run --short; then git commit -m "devrel"; else echo nothing changed; fi
-      - bump-my-version build
+      - bump-my-version bump build
       - task: sync
       - uv publish
       - git push
