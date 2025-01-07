@@ -64,7 +64,7 @@ class AsyncConnection(Connection):
 
     @override
     def is_closing(self) -> bool:
-        return self._writer.is_closing()
+        return self._writer.is_closing() or self._reader.at_eof()
 
     @override
     async def send_packet(self, data: str):
