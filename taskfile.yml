@@ -19,9 +19,9 @@ tasks:
     cmds:
       - git add .
       - if git commit --dry-run --short; then git commit -m "devrel"; else echo nothing changed; fi
-      - bumpversion build
+      - bump-my-version build
       - task: sync
-      - pdm publish
+      - uv publish
       - git push
   update:
     cmds:
@@ -44,7 +44,7 @@ tasks:
       - test $(dirname $(dirname $(pdm info --python))) -ef {{.VENV_DIR}}
   sync:
     cmds:
-      - pdm sync --without tools --only-keep
+      - uv sync
   init:
     deps:
       - use_venv
