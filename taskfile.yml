@@ -7,26 +7,31 @@ vars:
   VENV_DIR: "{{.VENV_STORE}}/{{.VENV_NAME}}"
   VENV_PYTHON: "{{.VENV_DIR}}/bin/python"
   DEPS: []
+  SHELL: '{{if eq .OS "Windows_NT"}}powershell{{end}}'
 
 tasks:
+  publish:
+    deps:
+      - build
+    cmds:
+      - uv publish --keyring-provider=subprocess --username=__token__
+      - git push
+  build:
+    cmds:
+      - '{{.SHELL}} rm -r dist'
+      - uv build
   release:
     cmds:
       - bump-my-version bump patch
       - task: sync
-      - rm -rf dist
-      - uv build
-      - uv publish --keyring-provider=subprocess --username=__token__
-      - git push
+      - task: publish
   devrel:
     cmds:
       - git add .
       - if git commit --dry-run --short; then git commit -m "devrel"; else echo nothing changed; fi
       - bump-my-version bump build
       - task: sync
-      - rm -rf dist
-      - uv build
-      - uv publish --keyring-provider=subprocess --username=__token__
-      - git push
+      - task: publish
   update:
     cmds:
       - for: { var: DEPS }
