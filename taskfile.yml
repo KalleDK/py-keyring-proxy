@@ -21,6 +21,7 @@ tasks:
       - if git commit --dry-run --short; then git commit -m "devrel"; else echo nothing changed; fi
       - bump-my-version bump build
       - task: sync
+      - uv build
       - uv publish --keyring-provider=subprocess --username=__token__
       - git push
   update:
