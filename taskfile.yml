@@ -11,9 +11,11 @@ vars:
 tasks:
   release:
     cmds:
-      - bumpversion patch
+      - bump-my-version bump patch
       - task: sync
-      - pdm publish
+      - rm -rf dist
+      - uv build
+      - uv publish --keyring-provider=subprocess --username=__token__
       - git push
   devrel:
     cmds:
