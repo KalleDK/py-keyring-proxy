@@ -10,11 +10,6 @@ vars:
   SHELL: '{{if eq .OS "Windows_NT"}}powershell{{end}}'
 
 tasks:
-  dist:
-    generates:
-      - dist
-    cmds:
-      - '{{.SHELL}} mkdir dist'
   publish:
     deps:
       - build
@@ -22,10 +17,8 @@ tasks:
       - uv publish --keyring-provider=subprocess --username=__token__
       - git push
   build:
-    deps:
-      - dist
     cmds:
-      - '{{.SHELL}} rm -r dist'
+      - '{{.SHELL}} rm -r {{if eq .OS "Windows_NT"}}-Force{{else}}-f{{end}} dist'
       - uv build
   release:
     cmds:
