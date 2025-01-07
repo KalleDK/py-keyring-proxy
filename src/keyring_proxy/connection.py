@@ -42,7 +42,7 @@ class Connection:
         return resp
 
     async def handle_request(self, backend: keyring.backend.KeyringBackend) -> bool:
-        logger.info("Handling new connection")
+        logger.info("Handling new request")
         try:
             req_data = await self.recv_packet()
             logger.debug(f"Received request: {req_data}")
