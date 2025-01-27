@@ -83,9 +83,13 @@ class AsyncConnection(Connection):
     async def close(self):
         try:
             await self._writer.drain()
-            self._writer.close()
-        except Exception as e:
-            logger.exception(f"Error closing connection: {e}")
+        except ConnectionResetError:
+            return
+        else:
+            try:
+                self._writer.close()
+            except Exception as e:
+                logger.exception(f"Error closing connection: {e}")
         await self._writer.wait_closed()
 
     @classmethod
